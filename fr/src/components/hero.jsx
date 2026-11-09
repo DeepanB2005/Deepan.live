@@ -3,6 +3,8 @@ import { useRef, useState, useEffect } from "react";
 import raysVideo from "../assets/4s.mp4";
 import reverseVideo from "../assets/rev1.mp4";
 import HeroContent from "./herocontent";
+import "./effects/smoke.css";
+import SmokeEffect from "./effects/smokeEffect";
 
 function Hero() {
   const forwardRef = useRef(null);
@@ -145,6 +147,7 @@ function Hero() {
       className="relative min-h-screen w-full overflow-hidden bg-black"
       onMouseMove={handleMouseMove}
     >
+      <SmokeEffect/>
       {/* ================= FORWARD ================= */}
       <video
         ref={forwardRef}

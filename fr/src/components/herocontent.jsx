@@ -31,7 +31,7 @@ const HeroContent = () => (
           guides={false}
           fontFamily={'Georgia, "Times New Roman", serif'}
           letterSpacing={0.01}
-          accentColor="#e63232"
+          accentColor="#38fcf6"
           reach={200}
           softness={0.8}
           lineStyle="dashed"

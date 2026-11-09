@@ -38,7 +38,7 @@ const PillNav = ({
         className="w-full h-full"
       >
         <nav
-          className="flex items-center justify-between gap-3 rounded-full border border-white/10 bg-transparent px-2 py-2 h-full"
+          className="flex items-center justify-between gap-3 rounded-full border border-white/5 bg-transparent px-2 py-2 h-full"
           aria-label="Primary navigation"
         >
           <ul className="flex flex-1 items-center justify-center gap-3 overflow-hidden rounded-full bg-transparent px-1 py-1">

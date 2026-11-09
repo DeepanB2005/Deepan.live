@@ -1,0 +1,90 @@
+.smoke-effect {
+  isolation: isolate;
+}
+
+.smoke-layer {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(10px) saturate(1.2) contrast(1.05);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.smoke-layer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.12));
+}
+
+.smoke-top-left {
+  width: 55%;
+  top: -28%;
+  left: -10%;
+  animation: smoke-left 6s ease-in-out infinite;
+}
+
+.smoke-bottom-right {
+  width: 55%;
+  bottom: -18%;
+  right: -10%;
+  animation: smoke-right 6s ease-in-out infinite;
+}
+
+/* Staggered animation timing */
+.smoke-delay-1 {
+  animation-delay: 1s;
+}
+
+.smoke-delay-2 {
+  animation-delay: 2.5s;
+}
+
+@keyframes smoke-left {
+  0% {
+    opacity: 0;
+    transform: translate(-10%, 10%) scale(0.95);
+  }
+
+  30% {
+    opacity: 0.5;
+  }
+
+  55% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(12%, -6%) scale(1.14);
+  }
+}
+
+@keyframes smoke-right {
+  0% {
+    opacity: 0;
+    transform: translate(12%, 12%) scale(0.95);
+  }
+
+  30% {
+    opacity: 0.5;
+  }
+
+  55% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-12%, -6%) scale(1.14);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .smoke-top-left,
+  .smoke-bottom-right {
+    width: 80%;
+  }
+}
