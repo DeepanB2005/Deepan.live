@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 
 import raysVideo from "../assets/4s.mp4";
 import reverseVideo from "../assets/rev1.mp4";
+import HeroContent from "./herocontent";
 
 function Hero() {
   const forwardRef = useRef(null);
@@ -27,7 +28,6 @@ function Hero() {
     forward.load();
     reverse.load();
 
-    // Make sure both are paused initially
     forward.pause();
     reverse.pause();
   }, []);
@@ -35,6 +35,7 @@ function Hero() {
   // ==============================
   // FORWARD
   // ==============================
+
   const playForward = () => {
     const forward = forwardRef.current;
     const reverse = reverseRef.current;
@@ -43,23 +44,37 @@ function Hero() {
 
     reverse.pause();
 
-    // Prepare first frame BEFORE showing
+    forward.pause();
     forward.currentTime = 0;
     forward.playbackRate = PLAYBACK_RATE;
 
     const start = () => {
       setDirection("forward");
-
       forward.play().catch(() => {});
+
+      forward.onended = () => {
+        // Fade out before resetting
+        forward.style.transition = "opacity 500ms ease-in-out";
+        forward.style.opacity = "0.5";
+
+        setTimeout(() => {
+          forward.pause();
+          forward.currentTime = 0;
+
+          // Fade back in after resetting
+          forward.style.opacity = "1";
+
+          setTimeout(() => {
+            forward.style.transition = "";
+          }, 350);
+        }, 350);
+      };
     };
 
-    // Wait until browser has the first frame
     if (forward.readyState >= 3) {
       start();
     } else {
-      forward.addEventListener("canplay", start, {
-        once: true,
-      });
+      forward.addEventListener("canplay", start, { once: true });
     }
   };
 
@@ -73,24 +88,18 @@ function Hero() {
     if (!forward || !reverse) return;
 
     forward.pause();
-
-    // Prepare first frame BEFORE showing
     reverse.currentTime = 0;
     reverse.playbackRate = PLAYBACK_RATE;
 
     const start = () => {
       setDirection("reverse");
-
       reverse.play().catch(() => {});
     };
 
-    // Wait until browser has the first frame
     if (reverse.readyState >= 3) {
       start();
     } else {
-      reverse.addEventListener("canplay", start, {
-        once: true,
-      });
+      reverse.addEventListener("canplay", start, { once: true });
     }
   };
 
@@ -143,10 +152,8 @@ function Hero() {
         muted
         playsInline
         preload="auto"
-        className={`absolute inset-0 h-full w-full object-cover ${
-          direction === "forward"
-            ? "opacity-100"
-            : "opacity-0"
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-out ${
+          direction === "forward" ? "opacity-100" : "opacity-0"
         }`}
       />
 
@@ -157,16 +164,17 @@ function Hero() {
         muted
         playsInline
         preload="auto"
-        className={`absolute inset-0 h-full w-full object-cover ${
-          direction === "reverse"
-            ? "opacity-100"
-            : "opacity-0"
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-out ${
+          direction === "reverse" ? "opacity-100" : "opacity-0"
         }`}
       />
 
+      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0, 0, 0, 0.08),rgba(2,6,23,0.7))]" />
+
       {/* ================= RED REGION ================= */}
       <div
-        className="absolute top-0 bottom-0 z-20 "
+        className="absolute top-0 bottom-0 z-20"
         style={{
           width: `${LEFT_WIDTH}px`,
           left: `${LEFT_OFFSET}px`,
@@ -174,8 +182,10 @@ function Hero() {
       />
 
       {/* CONTENT */}
-      <div className="relative z-30">
-        {/* Navbar / text / buttons */}
+      <div className="relative z-30 flex min-h-screen items-center px-6 sm:px-8 lg:px-16">
+        <div className="mx-10 w-full max-w-4xl -translate-x-2 -translate-y-10">
+          <HeroContent />
+        </div>
       </div>
     </section>
   );
