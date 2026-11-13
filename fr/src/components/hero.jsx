@@ -189,6 +189,7 @@ function Hero() {
         <div className="mx-10 w-full max-w-4xl -translate-x-2 -translate-y-10">
           <HeroContent />
         </div>
+      <div className="mt-178 ml-165 h-18 w-20 opacity-60"><img src="/clover_logo.svg"></img></div>
       </div>
     </section>
   );
