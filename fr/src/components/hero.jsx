@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 
 import raysVideo from "../assets/4s.mp4";
 import reverseVideo from "../assets/rev1.mp4";
-import HeroContent from "./herocontent";
+import HeroContent from "./herocontext";
 import "./effects/smoke.css";
 import SmokeEffect from "./effects/smokeEffect";
 
@@ -13,8 +13,13 @@ function Hero() {
   const lastPointerX = useRef(null);
 
   const [direction, setDirection] = useState("forward");
+  const [smokeKey, setSmokeKey] = useState(0);
 
   const PLAYBACK_RATE = 4;
+
+  useEffect(() => {
+    setSmokeKey((prev) => prev + 1);
+  }, []);
 
   // ===== PLAY REGION =====
   const LEFT_WIDTH = 300;
@@ -147,7 +152,7 @@ function Hero() {
       className="relative min-h-screen w-full overflow-hidden bg-black"
       onMouseMove={handleMouseMove}
     >
-      <SmokeEffect/>
+      <SmokeEffect key={smokeKey} />
       {/* ================= FORWARD ================= */}
       <video
         ref={forwardRef}
@@ -189,7 +194,7 @@ function Hero() {
         <div className="mx-10 w-full max-w-4xl -translate-x-2 -translate-y-10">
           <HeroContent />
         </div>
-      <div className="mt-178 ml-165 h-18 w-20 opacity-60"><img src="/clover_logo.svg"></img></div>
+      <div className="mt-178 ml-162 h-18 w-20 opacity-60"><img src="/clover_logo.svg"></img></div>
       </div>
     </section>
   );
