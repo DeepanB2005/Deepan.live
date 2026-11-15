@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import SideRays from '../components/effects/SideRays.jsx';
 import WebThreads from '../components/effects/webthreads.jsx';
 import meImage from '../assets/me.png';
+import WarpText from '../components//effects/warp';
+import GradientText from '../components/effects/textgradient.jsx';
 
 const container = {
   hidden: {},
@@ -116,14 +118,36 @@ function AboutPage() {
         {/* Heading */}
         <motion.div variants={item} className="mb-12 mt-20">
           <p className="mb-4 text-sm uppercase tracking-[0.4em] text-cyan-300">
-            Get to know me
+            Meet the Developer
           </p>
+<div className="flex items-center gap-0 whitespace-nowrap">
+  <div className="inline-flex h-[82px] min-h-0 w-[170px] -ml-3 overflow-visible md:h-[95px] md:w-[220px]">
+    <WarpText
+      text="About"
+      color="#f8f5ff"
+      warpStrength={0.08}
+      warpScale={2.5}
+      speed={1.55}
+      pointerInfluence={6}
+      pointerStrength={4.38}
+      refraction={0.018}
+      ripple
+      fontSize={190}
+      lineHeight={0.85}
+      className="!h-[82px] !min-h-0 !w-full !overflow-visible !rounded-none md:!h-[95px]"
+      style={{
+        height: '82px',
+        width: '100%'
+      }}
+    />
+  </div>
 
-          <h1 className="text-5xl font-bold tracking-tight md:text-7xl">
-            About <span className="text-cyan-300">Me.</span>
-          </h1>
+  <span className="inline-block text-5xl -ml-2 font-bold tracking-tight text-cyan-300 md:text-7xl">
+    ME():
+  </span>
+</div>
 
-          <div className="mt-6 h-1 w-20 rounded-full bg-gradient-to-r from-pink-400 to-cyan-300" />
+          <div className="mt-2 h-1 w-20 rounded-full bg-gradient-to-r from-pink-400 to-cyan-300" />
         </motion.div>
 
         {/* Introduction and Highlights */}
@@ -134,61 +158,88 @@ function AboutPage() {
             variants={container}
             className="w-full max-w-xl space-y-6"
           >
-            <motion.p
+            <div className="flex flex-nowrap items-center justify-start gap-2 whitespace-nowrap">
+
+            <motion.span
               variants={item}
-              className="text-2xl font-medium leading-relaxed text-gray-200 md:text-3xl"
+              className="shrink-0 text-2xl font-medium leading-tight text-gray-200 md:text-3xl"
             >
-              Hi, I'm Deepan. I build intelligent applications
-              by combining software engineering and AI.
-            </motion.p>
+              Hi, It's
+            </motion.span>
+
+            <GradientText
+              colors={['#27ff86', '#f4daa1', '#46f2ec']}
+              animationSpeed={1.5}
+              showBorder={false}
+              className="!inline-flex !w-fit !shrink-0 !p-0 !m-0 text-2xl font-medium md:text-3xl"
+            >
+              Deepan
+            </GradientText>
+
+            <motion.span
+              variants={item}
+              className="shrink-0 text-2xl font-medium leading-tight text-gray-200 md:text-3xl"
+            >
+              . Let's turn
+            </motion.span>
+
+          </div>
 
             <motion.p
               variants={item}
-              className="max-w-xl leading-8 text-gray-400"
+              className="text-2xl font-medium leading-relaxed text-gray-200 md:text-3xl -mt-3"
             >
-              I'm a final-year Artificial Intelligence and Data
+              ambitious ideas into intelligent digital experiences.
+            </motion.p>
+
+
+            <motion.p
+              variants={item}
+              className="max-w-xl leading-8 text-gray-300"
+            >
+              A Final-year Artificial Intelligence and Data
               Science student at Kongu Engineering College,
               passionate about Full Stack Development,
               Generative AI, and solving real-world problems.
             </motion.p>
 
             <motion.div
-  variants={item}
-  className="flex items-center gap-5 pt-4"
->
-  {/* LinkedIn */}
-  <a
-    href="https://www.linkedin.com/in/deepanb0202"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="LinkedIn"
-    className="group flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#0A66C2] hover:bg-[#0A66C2]/15 hover:text-[#0A66C2]"
-  >
-    <FaLinkedin size={23} />
-  </a>
+              variants={item}
+              className="flex items-center gap-5 pt-4"
+            >
+              {/* GitHub */}
+              <a
+                href="https://github.com/DeepanB2005"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                className="group flex h-12 w-12 items-center justify-center rounded-full border border-white bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-white hover:bg-white/10 hover:text-white"
+              >
+                <FaGithub size={23} />
+              </a>
 
-  {/* LeetCode */}
-  <a
-    href="https://leetcode.com/u/B_Deepan/"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="LeetCode"
-    className="group flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#FFA116] hover:bg-[#FFA116]/15 hover:text-[#FFA116]"
-  >
-    <FaCode size={23} />
-  </a>
+              {/* LeetCode */}
+              <a
+                href="https://leetcode.com/u/B_Deepan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LeetCode"
+                className="group flex h-12 w-12 items-center justify-center rounded-full border border-yellow-400 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#FFA116] hover:bg-[#FFA116]/15 hover:text-[#FFA116]"
+              >
+                <FaCode size={23} />
+              </a>
 
-  {/* GitHub */}
-  <a
-    href="https://github.com/DeepanB2005"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="GitHub"
-    className="group flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-white hover:bg-white/10 hover:text-white"
-  >
-    <FaGithub size={23} />
-  </a>
-</motion.div>
+              {/* LinkedIn */}
+              <a
+                href="https://www.linkedin.com/in/deepanb0202"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="group flex h-12 w-12 items-center justify-center rounded-full border border-blue-500 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#0A66C2] hover:bg-[#0A66C2]/15 hover:text-[#0A66C2]"
+              >
+                <FaLinkedin size={23} />
+              </a>
+            </motion.div>
           </motion.div>
 
           <motion.div
