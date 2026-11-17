@@ -1,5 +1,4 @@
-import ElectricBorder from '../components/effects/ElectricBorder.jsx';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import {
   FaLinkedin,
   FaGithub,
@@ -10,8 +9,8 @@ import {
   motion,
   useScroll,
   useTransform,
-  useMotionValue,
   useSpring,
+  useMotionValue,
 } from 'framer-motion';
 import SideRays from '../components/effects/SideRays.jsx';
 import WebThreads from '../components/effects/webthreads.jsx';
@@ -20,6 +19,8 @@ import WarpText from '../components//effects/warp';
 import GradientText from '../components/effects/textgradient.jsx';
 import { techStacks, nameColors } from '../data/aboutPageData.jsx';
 import { SkillGroup } from '../components/about/SkillGroup.jsx';
+import { EducationPhase } from '../components/about/EducationPhase.jsx';
+import { TechStacksPhase } from '../components/about/TechStacksPhase.jsx';
 
 const container = {
   hidden: {},
@@ -48,19 +49,16 @@ const item = {
   },
 };
 
+// Share of the scroll track used by phases 1-3. With a 600vh track this is
+// 350vh of scrolling, identical to the old 450vh track.
+const BASE_END = 0.7;
+
 const nameClass =
   '!inline-flex !w-fit !shrink-0 !p-0 !m-0 text-2xl font-medium md:text-3xl';
-
-// Fine-tune the starting position of the floating "Deepan" (px).
-// Negative = move up, positive = move down.
-const NAME_START_Y_NUDGE = 0;
-// How far below the image the name ends up (px).
-const NAME_END_GAP = 88;
 
 function AboutPage() {
   const sectionRef = useRef(null); // tall scroll track
   const stickyRef = useRef(null); // pinned viewport
-  const placeholderRef = useRef(null); // where "Deepan" sits in the sentence
   const imageRef = useRef(null);
 
   // ---- Scroll progress across the whole tall section (0 -> 1) ----
@@ -68,105 +66,104 @@ function AboutPage() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   });
-  const progress = useSpring(scrollYProgress, {
+  const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 90,
     damping: 25,
     mass: 0.4,
   });
 
+  // The first BASE_END of the track drives phases 1-3 exactly as before
+  // (remapped to 0 -> 1 so none of the numbers below need to change).
+  // The remaining tail is the exit: hold -> icons scatter -> About fades away.
+  const progress = useTransform(smoothProgress, [0, BASE_END], [0, 1]);
+  const exitProgress = useTransform(smoothProgress, [BASE_END, 1], [0, 1]);
+
+  // Tech stacks: stay fixed for a while (0 -> 0.3), then burst outward (0.3 -> 0.7)
+  const scatterScale = useTransform(exitProgress, [0.3, 0.7], [1, 2.2]);
+  const scatterOpacity = useTransform(exitProgress, [0.3, 0.62], [1, 0]);
+  const scatterBlur = useTransform(
+    exitProgress,
+    [0.3, 0.7],
+    ['blur(0px)', 'blur(14px)']
+  );
+  const scatterPointer = useTransform(exitProgress, (v) =>
+    v > 0.05 ? 'none' : 'auto'
+  );
+
+  // Whole About scene fades away in place at the very end (0.65 -> 1)
+  const aboutExitOpacity = useTransform(exitProgress, [0.65, 1], [1, 0]);
+  const aboutExitBlur = useTransform(
+    exitProgress,
+    [0.65, 1],
+    ['blur(0px)', 'blur(12px)']
+  );
+
   // Phase 1 (About Me) fades out
-  const introOpacity = useTransform(progress, [0.04, 0.24], [1, 0]);
-  const introY = useTransform(progress, [0.04, 0.24], [0, -40]);
+  const introOpacity = useTransform(progress, [0.04, 0.24, 0.34, 0.46], [1, 1, 0, 0]);
+  const introY = useTransform(progress, [0.04, 0.24, 0.34, 0.46], [0, 0, -14, -40]);
   const introBlur = useTransform(
     progress,
-    [0.04, 0.24],
-    ['blur(0px)', 'blur(8px)']
+    [0.04, 0.24, 0.34, 0.46],
+    ['blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(8px)']
   );
   const introPointer = useTransform(progress, (v) =>
     v > 0.12 ? 'none' : 'auto'
   );
 
   // Phase 2 (Education) fades in, holds longer, then fades out
-  const eduOpacity = useTransform(progress, [0.24, 0.58, 0.88], [0, 1, 0]);
-  const eduY = useTransform(progress, [0.24, 0.58, 0.88], [40, 0, -20]);
+  const eduOpacity = useTransform(progress, [0.22, 0.34, 0.7, 0.82, 0.96], [0, 1, 1, 0, 0]);
+  const eduY = useTransform(progress, [0.22, 0.34, 0.7, 0.82, 0.96], [40, 0, 0, -10, -20]);
   const eduBlur = useTransform(
     progress,
-    [0.24, 0.58, 0.88],
-    ['blur(8px)', 'blur(0px)', 'blur(10px)']
+    [0.22, 0.34, 0.7, 0.82, 0.96],
+    ['blur(8px)', 'blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(10px)']
   );
   const eduPointer = useTransform(progress, (v) =>
     v > 0.8 ? 'none' : 'auto'
   );
 
-  // Deepan fades out when Education starts to take over
-  const deepanFadeOpacity = useTransform(progress, [0.18, 0.36], [1, 0]);
-  const deepanFadeBlur = useTransform(progress, [0.18, 0.36], ['blur(0px)', 'blur(8px)']);
-
-  // Image + "Deepan" fade away after the education content is done
-  const tailOpacity = useTransform(progress, [0.78, 0.96], [1, 0]);
+  // Image + intro text fade away together, after a longer hold at their landing position
+  const tailOpacity = useTransform(progress, [0.72, 0.84, 0.9, 1], [1, 1, 0, 0]);
   const tailBlur = useTransform(
     progress,
-    [0.78, 0.96],
-    ['blur(0px)', 'blur(8px)']
+    [0.72, 0.84, 0.9, 1],
+    ['blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(8px)']
   );
 
   // Phase 3 (Tech Stacks) layer starts after education is fully settled
-  const techOpacity = useTransform(progress, [0.82, 0.98], [0, 1]);
-  const techY = useTransform(progress, [0.82, 0.98], [40, 0]);
+  // The layer itself appears almost instantly; the icons then fly in on their own
+  const techOpacity = useTransform(progress, [0.8, 0.84, 0.94, 1], [0, 1, 1, 1]);
+  const techY = useTransform(progress, [0.8, 0.84, 0.94, 1], [0, 0, 0, 0]);
   const techBlur = useTransform(
     progress,
-    [0.82, 0.98],
-    ['blur(8px)', 'blur(0px)']
+    [0.8, 0.84, 0.94, 1],
+    ['blur(0px)', 'blur(0px)', 'blur(0px)', 'blur(0px)']
   );
-  // Only let the glass icons receive hover once the layer is visible
+  // Only let the glass icons receive hover once they have landed
   const techPointer = useTransform(progress, (v) =>
-    v > 0.88 ? 'auto' : 'none'
+    v > 0.95 ? 'auto' : 'none'
   );
 
   // Phase 3: background threads fade away after the education phase has finished
-  const threadsOpacity = useTransform(progress, [0.62, 0.9], [1, 0]);
-  const threadsBlur = useTransform(progress, [0.62, 0.9], ['blur(0px)', 'blur(18px)']);
+  const threadsOpacity = useTransform(progress, [0.62, 0.8, 0.9], [1, 1, 0]);
+  const threadsBlur = useTransform(progress, [0.62, 0.8, 0.9], ['blur(0px)', 'blur(0px)', 'blur(18px)']);
 
-  // ---- "Deepan" stays inline with the sentence; no travel animation ----
-  const [start, setStart] = useState(null); // { left, top }
-  const dx = useMotionValue(0);
-  const dy = useMotionValue(0);
-  const travel = useTransform(progress, [0, 1], [0, 0]);
-  const nameX = useTransform([travel, dx], ([t, d]) => 0);
-  const nameY = useTransform([travel, dy], ([t, d]) => 0);
-  const nameScale = useTransform(travel, [0, 1], [1, 1]);
-
-  useEffect(() => {
-    const measure = () => {
-      if (!stickyRef.current || !placeholderRef.current) return;
-      const c = stickyRef.current.getBoundingClientRect();
-      const ph = placeholderRef.current.getBoundingClientRect();
-
-      const startLeft = ph.left - c.left;
-      const startTop = ph.top - c.top + NAME_START_Y_NUDGE;
-
-      setStart({ left: startLeft, top: startTop });
-      dx.set(0);
-      dy.set(0);
-    };
-
-    // wait for the intro animation to settle before measuring
-    const t = setTimeout(measure, 2000);
-    window.addEventListener('resize', measure);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', measure);
-    };
-  }, [dx, dy]);
+  // The name stays inline with the sentence and fades with the nearby intro text.
+  const nameX = useMotionValue(0);
+  const nameY = useMotionValue(0);
 
   return (
     <section
       ref={sectionRef}
       id="about"
-      className="relative h-[450vh] w-full bg-black text-white"
+      className="relative h-[600vh] w-full bg-black text-white"
     >
-      <div
+      <motion.div
         ref={stickyRef}
+        style={{
+          opacity: aboutExitOpacity,
+          filter: aboutExitBlur,
+        }}
         className="sticky top-0 h-screen w-full overflow-hidden"
       >
         {/* Background Light Animation */}
@@ -336,12 +333,10 @@ function AboutPage() {
                     Hi, It's
                   </motion.span>
 
-                  {/* Invisible placeholder keeps the sentence layout and
-                      marks where the floating name starts */}
-                  <span
-                    ref={placeholderRef}
-                    aria-hidden="true"
-                    className="invisible inline-flex shrink-0"
+                  <motion.span
+                    variants={item}
+                    className="inline-flex shrink-0"
+                    style={{ opacity: introOpacity, filter: introBlur }}
                   >
                     <GradientText
                       colors={nameColors}
@@ -351,7 +346,7 @@ function AboutPage() {
                     >
                       Deepan
                     </GradientText>
-                  </span>
+                  </motion.span>
 
                   <motion.span
                     variants={item}
@@ -417,54 +412,12 @@ function AboutPage() {
               </motion.div>
 
               {/* Phase 2: education */}
-              <motion.div
-                style={{
-                  opacity: eduOpacity,
-                  y: eduY,
-                  filter: eduBlur,
-                  pointerEvents: eduPointer,
-                  gridArea: '1 / 1',
-                }}
-                className="mt-20 flex w-full -translate-y-[150px] items-center"
-              >
-                <ElectricBorder
-                  color="#7df9ff"
-                  speed={1}
-                  chaos={0.5}
-                  spread={0.6}
-                  strands={3}
-                  thickness={1.5}
-                  borderRadius={24}
-                >
-                  <div className="flex min-h-[200px] w-full max-w-[580px] items-center rounded-[24px] bg-white/10 p-6">
-                    <div className="flex items-start gap-4">
-                      {/* Icon */}
-                      <div className="flex h-12 w-22 shrink-0 items-center justify-center rounded-full border border-cyan-300/60 bg-cyan-300/10 text-cyan-300">
-                        <FaGraduationCap size={22} />
-                      </div>
-
-                      {/* Details */}
-                      <div className="min-w-0 space-y-3">
-                        <h3 className="text-xl font-semibold leading-snug text-white md:text-2xl">
-                          Kongu Engineering College
-                        </h3>
-
-                        <p className="text-sm leading-relaxed text-gray-200 md:text-base">
-                          B.Tech in Artificial Intelligence and Data Science
-                        </p>
-
-                        <p className="text-gray-300">CGPA: 7.84</p>
-
-                        <p className="text-gray-400">Erode, Tamil Nadu</p>
-
-                        <p className="pt-2 text-sm uppercase tracking-widest text-cyan-300">
-                          2024 – 2027
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </ElectricBorder>
-              </motion.div>
+              <EducationPhase
+                eduOpacity={eduOpacity}
+                eduY={eduY}
+                eduBlur={eduBlur}
+                eduPointer={eduPointer}
+              />
             </div>
 
             {/* Image */}
@@ -491,77 +444,27 @@ function AboutPage() {
           </div>
         </motion.div>
 
-        {/* Floating "Deepan": starts on the "Hi, It's" line, glides to below the image */}
-        {start && (
-          <motion.div
-            style={{
-              position: 'absolute',
-              left: start.left,
-              top: start.top,
-              x: nameX,
-              y: nameY,
-              scale: nameScale,
-              opacity: deepanFadeOpacity,
-              filter: deepanFadeBlur,
-              transformOrigin: 'center center',
-            }}
-            className="pointer-events-none z-20"
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              // flex (not block) so the box is exactly the text height,
-              // matching the placeholder and sitting on the same line
-              className="flex"
-            >
-              <GradientText
-                colors={nameColors}
-                animationSpeed={1.5}
-                showBorder={false}
-                className={nameClass}
-              >
-                Deepan
-              </GradientText>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Phase 3: Tech Stacks */}
+        {/* Exit wrapper: holds still, then the icons burst outward and fade */}
         <motion.div
           style={{
-            opacity: techOpacity,
-            y: techY,
-            filter: techBlur,
-            pointerEvents: techPointer,
+            opacity: scatterOpacity,
+            scale: scatterScale,
+            filter: scatterBlur,
+            pointerEvents: scatterPointer,
           }}
-          className="absolute inset-0 z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-6 pt-16 md:px-12 lg:px-20"
+          className="absolute inset-0 z-20 will-change-transform"
         >
-          <div className="mb-4">
-            <p className="mb-2 text-sm uppercase tracking-[0.4em] text-cyan-300">
-              What I Work With
-            </p>
-            <h2 className="text-5xl font-bold tracking-tight text-[#f8f5ff] md:text-6xl">
-              Tech Stacks
-            </h2>
-            <div className="mt-3 h-1 w-20 rounded-full bg-gradient-to-r from-pink-400 to-cyan-300" />
-          </div>
-
-          <div className="grid gap-3 lg:grid-cols-2">
-            {techStacks.map((group, i) => (
-              <SkillGroup
-                key={group.title}
-                progress={progress}
-                index={i}
-                title={group.title}
-                accent={group.accent}
-                items={group.items}
-                wide={group.wide}
-              />
-            ))}
-          </div>
+          <TechStacksPhase
+            progress={progress}
+            exitProgress={exitProgress}
+            techOpacity={techOpacity}
+            techY={techY}
+            techBlur={techBlur}
+            techPointer={techPointer}
+            techStacks={techStacks}
+          />
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }

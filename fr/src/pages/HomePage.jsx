@@ -14,6 +14,7 @@ import Hero from '../components/hero.jsx';
 import PillNav from '../components/nav.jsx';
 import { useIntroReady } from '../components/introContext.jsx';
 import logo from '../assets/react.svg';
+import Experiences from './Experiences.jsx';
 
 // How far (in screen heights) the user scrolls while Home dissolves into
 // About. During this distance both sections stay pinned in place.
@@ -85,6 +86,13 @@ function HomePage() {
       const t = setTimeout(() => scrollToY(window.innerHeight * FADE_SCREENS), 50);
       return () => clearTimeout(t);
     }
+    if (location.hash === '#experiences') {
+      const t = setTimeout(() => {
+        const el = document.getElementById('experiences');
+        if (el) scrollToY(el.getBoundingClientRect().top + window.scrollY);
+      }, 50);
+      return () => clearTimeout(t);
+    }
     // 'default' key = first load/refresh: leave browser scroll restoration alone.
     if (location.key !== 'default') {
       scrollToY(0);
@@ -93,14 +101,45 @@ function HomePage() {
   }, [location.key, location.hash, location.pathname, introReady, reduceMotion]);
 
   const navItems = [
-    { label: 'Projects', href: '/projects' },
+    { label: 'Projects', href: '#projects' },
     { label: 'About', href: '#about' },
     { label: 'Home', href: '/' },
-    { label: 'Services', href: '/services' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Experiences', href: '#experiences' },
+    { label: 'Contact', href: '#contact' },
   ];
 
   const navShown = introReady || reduceMotion;
+
+  const experienceSectionRef = useRef(null);
+  const { scrollYProgress: experienceScrollProgress } = useScroll({
+    target: experienceSectionRef,
+    offset: ['start start', 'end end'],
+  });
+  const experienceProgress = useSpring(experienceScrollProgress, {
+    stiffness: 120,
+    damping: 24,
+    mass: 0.35,
+  });
+
+  const experienceFadeIn = useTransform(
+    experienceProgress,
+    [0, 0.14, 0.5, 1],
+    [0, 0, 1, 1]
+  );
+  const experienceFadeOut = useTransform(
+    experienceProgress,
+    [0.12, 0.38, 0.72, 1],
+    [1, 1, 0, 0]
+  );
+
+  // The About section should keep its position and simply dissolve while the
+  // experience content fades in on top, matching the Home -> About layered
+  // transition without any upward drift or motion.
+  const aboutFadeAway = useTransform(
+    experienceProgress,
+    [0.3, 0.35, 0.7, 1],
+    [1, 1, 0, 0]
+  );
 
   return (
     <div className="relative w-full bg-black text-white">
@@ -141,13 +180,46 @@ function HomePage() {
           </motion.div>
 
           <motion.div
-            className="sticky top-0 z-10 -mt-[100vh]"
+            className="sticky top-0 z-10"
             style={{ opacity: aboutOpacity }}
           >
             <AboutPage key={aboutIntroKey} />
           </motion.div>
 
           <div aria-hidden="true" style={{ height: `${FADE_SCREENS * 100}vh` }} />
+        </section>
+
+        <section
+          ref={experienceSectionRef}
+          id="experiences"
+          className="relative h-[220vh] w-full bg-black"
+        >
+          <motion.div
+            className="sticky top-0 z-20 h-screen w-full"
+            style={{
+              opacity: experienceFadeIn,
+            }}
+          >
+            <Experiences />
+          </motion.div>
+
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-10"
+            style={{
+              opacity: aboutFadeAway,
+            }}
+          >
+            <div className="h-screen w-full bg-black" />
+          </motion.div>
+
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-0"
+            style={{
+              opacity: experienceFadeOut,
+            }}
+          >
+            <div className="h-screen w-full bg-black" />
+          </motion.div>
         </section>
       </main>
     </div>
