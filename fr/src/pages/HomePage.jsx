@@ -14,11 +14,11 @@ import Hero from '../components/hero.jsx';
 import PillNav from '../components/nav.jsx';
 import { useIntroReady } from '../components/introContext.jsx';
 import logo from '../assets/react.svg';
-import Experiences from './Experiences.jsx';
+import { PROJECTS_FADE, PROJECTS_NAV_TARGET } from './Projects.jsx';
 
 // How far (in screen heights) the user scrolls while Home dissolves into
 // About. During this distance both sections stay pinned in place.
-const FADE_SCREENS = 1.5;
+const FADE_SCREENS = 1.0;
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -29,6 +29,8 @@ function HomePage() {
   const introReady = useIntroReady();
   const reduceMotion = useReducedMotion();
   const [aboutActive, setAboutActive] = useState(false);
+  const [experienceActive, setExperienceActive] = useState(false);
+  const [projectsActive, setProjectsActive] = useState(false);
   const [aboutIntroKey, setAboutIntroKey] = useState(0);
   const [homeIntroKey, setHomeIntroKey] = useState(0);
   const [navIntroKey, setNavIntroKey] = useState(0);
@@ -59,7 +61,29 @@ function HomePage() {
   // ---- ABOUT: rays + content intensify from blank, in place (0.45 -> 1)
   const aboutOpacity = useTransform(progress, [0.45, 1], [0, 1]);
 
-  // Re-render only when crossing the halfway point (drives the nav highlight).
+  useMotionValueEvent(scrollY, 'change', () => {
+    // Projects counts as "active" once the cross-fade is past its midpoint.
+    let inProjects = false;
+    const projectsSection = document.getElementById('projects');
+    if (projectsSection) {
+      const rect = projectsSection.getBoundingClientRect();
+      const travel = rect.height - window.innerHeight;
+      const p = travel > 0 ? -rect.top / travel : 0;
+      inProjects = p > (PROJECTS_FADE[0] + PROJECTS_FADE[1]) / 2;
+    }
+    setProjectsActive(inProjects);
+
+    const experienceSection = document.getElementById('experiences');
+    if (experienceSection) {
+      const rect = experienceSection.getBoundingClientRect();
+      setExperienceActive(
+        !inProjects &&
+          rect.top <= window.innerHeight * 0.55 &&
+          rect.bottom > window.innerHeight * 0.35
+      );
+    }
+  });
+
   useMotionValueEvent(rawProgress, 'change', (v) => {
     setAboutActive(v > 0.5);
 
@@ -93,6 +117,18 @@ function HomePage() {
       }, 50);
       return () => clearTimeout(t);
     }
+    if (location.hash === '#projects') {
+      const t = setTimeout(() => {
+        const el = document.getElementById('projects');
+        if (!el) return;
+        // Home/About is pinned during the first FADE_SCREENS of scroll, so its final
+        // position is shifted down by whatever part of that distance is still unscrolled.
+        const pinShift = Math.max(0, window.innerHeight * FADE_SCREENS - window.scrollY);
+        const top = el.getBoundingClientRect().top + window.scrollY + pinShift;
+        scrollToY(top + PROJECTS_NAV_TARGET * (el.offsetHeight - window.innerHeight));
+      }, 50);
+      return () => clearTimeout(t);
+    }
     // 'default' key = first load/refresh: leave browser scroll restoration alone.
     if (location.key !== 'default') {
       scrollToY(0);
@@ -110,37 +146,6 @@ function HomePage() {
 
   const navShown = introReady || reduceMotion;
 
-  const experienceSectionRef = useRef(null);
-  const { scrollYProgress: experienceScrollProgress } = useScroll({
-    target: experienceSectionRef,
-    offset: ['start start', 'end end'],
-  });
-  const experienceProgress = useSpring(experienceScrollProgress, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.35,
-  });
-
-  const experienceFadeIn = useTransform(
-    experienceProgress,
-    [0, 0.14, 0.5, 1],
-    [0, 0, 1, 1]
-  );
-  const experienceFadeOut = useTransform(
-    experienceProgress,
-    [0.12, 0.38, 0.72, 1],
-    [1, 1, 0, 0]
-  );
-
-  // The About section should keep its position and simply dissolve while the
-  // experience content fades in on top, matching the Home -> About layered
-  // transition without any upward drift or motion.
-  const aboutFadeAway = useTransform(
-    experienceProgress,
-    [0.3, 0.35, 0.7, 1],
-    [1, 1, 0, 0]
-  );
-
   return (
     <div className="relative w-full bg-black text-white">
       {/* Fixed so the nav stays visible during the whole transition */}
@@ -155,7 +160,15 @@ function HomePage() {
           logo={logo}
           logoAlt="Company Logo"
           items={navItems}
-          activeHref={aboutActive ? '#about' : location.pathname}
+          activeHref={
+            projectsActive
+              ? '#projects'
+              : experienceActive
+                ? '#experiences'
+                : aboutActive
+                  ? '#about'
+                  : location.pathname
+          }
         />
       </motion.div>
 
@@ -180,7 +193,7 @@ function HomePage() {
           </motion.div>
 
           <motion.div
-            className="sticky top-0 z-10"
+            className="sticky top-0 z-10 -mt-[100vh]"
             style={{ opacity: aboutOpacity }}
           >
             <AboutPage key={aboutIntroKey} />
@@ -189,38 +202,6 @@ function HomePage() {
           <div aria-hidden="true" style={{ height: `${FADE_SCREENS * 100}vh` }} />
         </section>
 
-        <section
-          ref={experienceSectionRef}
-          id="experiences"
-          className="relative h-[220vh] w-full bg-black"
-        >
-          <motion.div
-            className="sticky top-0 z-20 h-screen w-full"
-            style={{
-              opacity: experienceFadeIn,
-            }}
-          >
-            <Experiences />
-          </motion.div>
-
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-10"
-            style={{
-              opacity: aboutFadeAway,
-            }}
-          >
-            <div className="h-screen w-full bg-black" />
-          </motion.div>
-
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-0"
-            style={{
-              opacity: experienceFadeOut,
-            }}
-          >
-            <div className="h-screen w-full bg-black" />
-          </motion.div>
-        </section>
       </main>
     </div>
   );

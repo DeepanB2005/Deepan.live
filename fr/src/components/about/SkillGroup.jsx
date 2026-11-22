@@ -7,6 +7,7 @@ const FLY_DURATION = 0.09; // how long each icon takes to land
 
 export function SkillGroup({
   progress,
+  exitProgress,
   index,
   title,
   accent,
@@ -55,6 +56,7 @@ export function SkillGroup({
               skill={skill}
               index={globalIndex}
               progress={progress}
+              exitProgress={exitProgress}
               start={start}
               end={start + FLY_DURATION}
             />

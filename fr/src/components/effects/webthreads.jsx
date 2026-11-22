@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 const ROOT = 'relative h-full w-full overflow-hidden';
-const CANVAS = 'absolute inset-0 block h-full w-full';
+const CANVAS = 'pointer-events-none absolute inset-0 block h-full w-full';
 
 const MAX_THREADS = 24;
 const MAX_COLORS = 6;

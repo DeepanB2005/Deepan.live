@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { SkillGroup } from './SkillGroup.jsx';
+import { PageHeading } from '../PageHeadings.jsx';
 
-export function TechStacksPhase({ progress, techOpacity, techY, techBlur, techPointer, techStacks }) {
+export function TechStacksPhase({ progress, exitProgress, techOpacity, techY, techBlur, techPointer, techStacks }) {
   const total = techStacks.reduce((n, g) => n + g.items.length, 0);
   let running = 0;
 
@@ -19,9 +20,20 @@ export function TechStacksPhase({ progress, techOpacity, techY, techBlur, techPo
         <p className="mb-2 text-sm uppercase tracking-[0.4em] text-cyan-300">
           What I Work With
         </p>
-        <h2 className="text-5xl font-bold tracking-tight text-[#f8f5ff] md:text-6xl">
-          Tech Stacks
-        </h2>
+        <PageHeading
+          name="techStacks"
+          warpStrength={0.12}
+          warpScale={2.2}
+          speed={1.25}
+          pointerStrength={1.35}
+          refraction={0.024}
+          fontSize={82}
+          fontWeight={700}
+          letterSpacing="-0.04em"
+          lineHeight={0.9}
+          className="!h-[72px] !min-h-0 !w-[260px] md:!h-[82px] md:!w-[330px]"
+          style={{ height: '72px', width: '260px' }}
+        />
         <div className="mt-3 h-1 w-20 rounded-full bg-gradient-to-r from-pink-400 to-cyan-300" />
       </div>
 
@@ -33,6 +45,7 @@ export function TechStacksPhase({ progress, techOpacity, techY, techBlur, techPo
             <SkillGroup
               key={group.title}
               progress={progress}
+              exitProgress={exitProgress}
               index={i}
               title={group.title}
               accent={group.accent}

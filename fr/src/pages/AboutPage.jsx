@@ -1,3 +1,4 @@
+import ProjectsPage, { EXPERIENCES_FADE, useSectionProgress } from './Projects.jsx';
 import { useRef } from 'react';
 import {
   FaLinkedin,
@@ -15,12 +16,13 @@ import {
 import SideRays from '../components/effects/SideRays.jsx';
 import WebThreads from '../components/effects/webthreads.jsx';
 import meImage from '../assets/me.png';
-import WarpText from '../components//effects/warp';
+import { PageHeading } from '../components/PageHeadings.jsx';
 import GradientText from '../components/effects/textgradient.jsx';
 import { techStacks, nameColors } from '../data/aboutPageData.jsx';
 import { SkillGroup } from '../components/about/SkillGroup.jsx';
 import { EducationPhase } from '../components/about/EducationPhase.jsx';
 import { TechStacksPhase } from '../components/about/TechStacksPhase.jsx';
+import Experiences from './Experiences.jsx';
 
 const container = {
   hidden: {},
@@ -49,8 +51,8 @@ const item = {
   },
 };
 
-// Share of the scroll track used by phases 1-3. With a 600vh track this is
-// 350vh of scrolling, identical to the old 450vh track.
+// Share of the scroll track used by phases 1-3.
+// Tech stacks and the following exit animations share the remaining tail.
 const BASE_END = 0.7;
 
 const nameClass =
@@ -79,19 +81,20 @@ function AboutPage() {
   const exitProgress = useTransform(smoothProgress, [BASE_END, 1], [0, 1]);
 
   // Tech stacks: stay fixed for a while (0 -> 0.3), then burst outward (0.3 -> 0.7)
-  const scatterScale = useTransform(exitProgress, [0.3, 0.7], [1, 2.2]);
+  const scatterScale = useTransform(exitProgress, [0.3, 0.62], [1, 1]);
   const scatterOpacity = useTransform(exitProgress, [0.3, 0.62], [1, 0]);
   const scatterBlur = useTransform(
     exitProgress,
-    [0.3, 0.7],
-    ['blur(0px)', 'blur(14px)']
+    [0.3, 0.62],
+    ['blur(0px)', 'blur(0px)']
   );
-  const scatterPointer = useTransform(exitProgress, (v) =>
-    v > 0.05 ? 'none' : 'auto'
+  const scatterPointer = useTransform([progress, exitProgress], ([phase, exit]) =>
+    phase > 0.94 && exit < 0.05 ? 'auto' : 'none'
   );
 
-  // Whole About scene fades away in place at the very end (0.65 -> 1)
+  // Whole About scene dissolves away at the very end (0.65 -> 1)
   const aboutExitOpacity = useTransform(exitProgress, [0.65, 1], [1, 0]);
+  const aboutExitScale = useTransform(exitProgress, [0.65, 1], [1, 0.94]);
   const aboutExitBlur = useTransform(
     exitProgress,
     [0.65, 1],
@@ -106,9 +109,8 @@ function AboutPage() {
     [0.04, 0.24, 0.34, 0.46],
     ['blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(8px)']
   );
-  const introPointer = useTransform(progress, (v) =>
-    v > 0.12 ? 'none' : 'auto'
-  );
+  // Keep the intro links interactive throughout their visible phase.
+  const introPointer = 'auto';
 
   // Phase 2 (Education) fades in, holds longer, then fades out
   const eduOpacity = useTransform(progress, [0.22, 0.34, 0.7, 0.82, 0.96], [0, 1, 1, 0, 0]);
@@ -118,9 +120,12 @@ function AboutPage() {
     [0.22, 0.34, 0.7, 0.82, 0.96],
     ['blur(8px)', 'blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(10px)']
   );
-  const eduPointer = useTransform(progress, (v) =>
-    v > 0.8 ? 'none' : 'auto'
-  );
+  const eduPointer = useTransform(progress, [0.22, 0.34, 0.7, 0.82], [
+    'none',
+    'auto',
+    'auto',
+    'none',
+  ]);
 
   // Image + intro text fade away together, after a longer hold at their landing position
   const tailOpacity = useTransform(progress, [0.72, 0.84, 0.9, 1], [1, 1, 0, 0]);
@@ -152,16 +157,40 @@ function AboutPage() {
   const nameX = useMotionValue(0);
   const nameY = useMotionValue(0);
 
+  // Experiences fades in after the About/tech-stack exit, then fades back out
+  // as Projects takes over (Projects progress comes from the wrapper div below).
+  const projectsRef = useRef(null);
+  const projectsProgress = useSectionProgress(projectsRef);
+
+  const experiencesIn = useTransform(exitProgress, [0.62, 1], [0, 1]);
+  const experiencesOut = useTransform(projectsProgress, EXPERIENCES_FADE, [1, 0]);
+  const experiencesOpacity = useTransform(
+    [experiencesIn, experiencesOut],
+    ([a, b]) => a * b
+  );
+  const experiencesFilter = useTransform(
+    [experiencesIn, experiencesOut],
+    ([a, b]) => `blur(${(1 - a) * 10 + (1 - b) * 10}px)`
+  );
+  const experiencesPointer = useTransform(experiencesOpacity, (v) =>
+    v > 0.05 ? 'auto' : 'none'
+  );
+  const experiencesVisibility = useTransform(experiencesOut, (v) =>
+    v <= 0.001 ? 'hidden' : 'visible'
+  );
+
   return (
-    <section
+    <div className="relative w-full">
+      <section
       ref={sectionRef}
       id="about"
-      className="relative h-[600vh] w-full bg-black text-white"
+      className="relative h-[450vh] w-full bg-black text-white"
     >
       <motion.div
         ref={stickyRef}
         style={{
           opacity: aboutExitOpacity,
+          scale: aboutExitScale,
           filter: aboutExitBlur,
         }}
         className="sticky top-0 h-screen w-full overflow-hidden"
@@ -259,17 +288,9 @@ function AboutPage() {
                 Meet the Developer
               </p>
               <div className="flex items-center gap-0 whitespace-nowrap">
-                <div className="inline-flex h-[82px] min-h-0 w-[170px] -ml-3 overflow-visible md:h-[95px] md:w-[220px]">
-                  <WarpText
-                    text="About"
-                    color="#f8f5ff"
-                    warpStrength={0.08}
-                    warpScale={2.5}
-                    speed={1.55}
-                    pointerInfluence={6}
-                    pointerStrength={4.38}
-                    refraction={0.018}
-                    ripple
+                <div className="inline-flex h-[82px] min-h-0 w-[170px] -ml-3 overflow-visible md:h-[95px] md:w-[220px] ">
+                  <PageHeading
+                    name="about"
                     fontSize={190}
                     lineHeight={0.85}
                     className="!h-[82px] !min-h-0 !w-full !overflow-visible !rounded-none md:!h-[95px]"
@@ -292,15 +313,25 @@ function AboutPage() {
                 opacity: eduOpacity,
                 y: eduY,
                 filter: eduBlur,
+                pointerEvents: eduPointer,
               }}
-              className="pointer-events-none absolute inset-0 flex flex-col justify-end -translate-y-[50px]"
+              className="absolute inset-0 flex flex-col justify-end -translate-y-[50px]"
             >
               <p className="mb-2 text-sm uppercase tracking-[0.4em] text-cyan-300">
                 Academic Background
               </p>
-              <h2 className="text-5xl font-bold tracking-tight text-[#f8f5ff] md:text-7xl">
-                Education
-              </h2>
+              <div className="flex items-center gap-0 whitespace-nowrap">
+                <div className="inline-flex h-[92px] min-h-0 w-[170px] -ml-3 overflow-visible md:h-[95px] md:w-[220px]">
+                  <PageHeading
+                    name="education"
+                    className="!h-[92px] !min-h-0 !w-full !overflow-visible !rounded-none md:!h-[95px]"
+                    style={{
+                      height: '92px',
+                      width: '100%',
+                    }}
+                  />
+                </div>
+              </div>
             </motion.div>
 
             <motion.div
@@ -374,7 +405,7 @@ function AboutPage() {
 
                 <motion.div
                   variants={item}
-                  className="flex items-center gap-5 pt-4"
+                  className="relative z-30 flex items-center gap-5 pt-4"
                 >
                   {/* GitHub */}
                   <a
@@ -382,7 +413,8 @@ function AboutPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="GitHub"
-                    className="group flex h-12 w-12 items-center justify-center rounded-full border border-white bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-white hover:bg-white/10 hover:text-white"
+                    style={{ pointerEvents: 'auto' }}
+                    className="group relative z-[40] pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-white bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-white hover:bg-white/10 hover:text-white"
                   >
                     <FaGithub size={23} />
                   </a>
@@ -393,7 +425,8 @@ function AboutPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="LeetCode"
-                    className="group flex h-12 w-12 items-center justify-center rounded-full border border-yellow-400 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#FFA116] hover:bg-[#FFA116]/15 hover:text-[#FFA116]"
+                    style={{ pointerEvents: 'auto' }}
+                    className="group relative z-[40] pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-yellow-400 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#FFA116] hover:bg-[#FFA116]/15 hover:text-[#FFA116]"
                   >
                     <FaCode size={23} />
                   </a>
@@ -404,7 +437,8 @@ function AboutPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="LinkedIn"
-                    className="group flex h-12 w-12 items-center justify-center rounded-full border border-blue-500 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#0A66C2] hover:bg-[#0A66C2]/15 hover:text-[#0A66C2]"
+                    style={{ pointerEvents: 'auto' }}
+                    className="group relative z-[40] pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-blue-500 bg-white/5 text-gray-300 transition-all duration-300 hover:scale-110 hover:border-[#0A66C2] hover:bg-[#0A66C2]/15 hover:text-[#0A66C2]"
                   >
                     <FaLinkedin size={23} />
                   </a>
@@ -465,7 +499,29 @@ function AboutPage() {
           />
         </motion.div>
       </motion.div>
-    </section>
+
+      </section>
+
+      {/* Experiences: pinned in place (sticky), overlapping the last screen of the
+          About track exactly where it used to sit, then fades out for Projects */}
+      <motion.section
+        id="experiences"
+        style={{
+          opacity: experiencesOpacity,
+          filter: experiencesFilter,
+          pointerEvents: experiencesPointer,
+          visibility: experiencesVisibility,
+        }}
+        className="sticky top-0 z-30 -mt-[100vh] h-screen w-full"
+      >
+        <Experiences />
+      </motion.section>
+
+      {/* Projects: starts on the same screen as Experiences, fades in over it */}
+      <div ref={projectsRef} className="relative -mt-[100vh] w-full">
+        <ProjectsPage progress={projectsProgress} />
+      </div>
+    </div>
   );
 }
 
