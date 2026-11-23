@@ -15,9 +15,14 @@ const PillNav = ({
   activeHref = '/',
   className = ''
 }) => {
-  const [navVisible, setNavVisible] = useState(false);
+  const isHomeSection = activeHref === '/';
+  const [navVisible, setNavVisible] = useState(isHomeSection);
+  const isNavVisible = isHomeSection || navVisible;
 
   useEffect(() => {
+    setNavVisible(isHomeSection);
+    if (isHomeSection) return undefined;
+
     const revealDistance = 110;
 
     const handleMouseMove = (event) => {
@@ -35,7 +40,7 @@ const PillNav = ({
       window.removeEventListener('mousemove', handleMouseMove);
       document.documentElement.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [isHomeSection]);
 
   const basePillClasses =
     'relative isolate flex items-center justify-center rounded-full px-6 md:px-8 py-3 font-semibold text-[0.82rem] md:text-[0.92rem] uppercase tracking-[0.12em] transition-colors duration-300';
@@ -43,10 +48,10 @@ const PillNav = ({
   return (
     <motion.div
       initial={false}
-      animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -20, scale: navVisible ? 1 : 0.9 }}
+      animate={{ opacity: isNavVisible ? 1 : 0, y: isNavVisible ? 0 : -20, scale: isNavVisible ? 1 : 0.9 }}
       transition={{ duration: 0.3 }}
       className={`fixed left-1/2 top-5 z-50 w-[min(92vw,980px)] -translate-x-1/2 ${className}`}
-      style={{ pointerEvents: navVisible ? 'auto' : 'none' }}
+      style={{ pointerEvents: isNavVisible ? 'auto' : 'none' }}
     >
 
         <nav

@@ -421,7 +421,7 @@ function AboutPage() {
 
                   {/* LeetCode */}
                   <a
-                    href="https://leetcode.com/u/B_Deepan/"
+                    href="https://leetcode.com/u/DeepanB2005/"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="LeetCode"

@@ -159,6 +159,7 @@ function HomePage() {
           key={navIntroKey}
           logo={logo}
           logoAlt="Company Logo"
+          alwaysVisible
           items={navItems}
           activeHref={
             projectsActive
